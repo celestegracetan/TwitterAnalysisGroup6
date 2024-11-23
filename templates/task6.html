@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <!-- Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<style>   
+  body {
+    background-color: #F5F8FA; 
+}
+
+.home-content {
+    margin-left: 260px;
+    transition: margin-left 0.5s ease;
+    width: calc(100% - 260px);
+    box-sizing: border-box;
+}
+
+.index-list-header {
+    display: flex;
+    align-items: center;
+    background: linear-gradient(to right, #1DA1F2, #0056b3); 
+    height: 15vh;
+    width: 100%;
+    box-sizing: border-box;
+    color: white;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+}
+
+.index-list-content {
+    background-color: #FFFFFF;
+    height: 85vh;
+    overflow-y: auto;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+    border-radius: 8px; 
+}
+
+
+.sidebar.close ~ .home-content {
+    margin-left: 78px;
+    width: calc(100% - 78px);
+}
+    .chart-row {
+        display: flex;
+        justify-content: space-between;
+        margin: 20px 0;
+    }
+
+    .chart-container {
+        background-color: #FFFFFF;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        flex: 1;
+        margin: 10px;
+    }
+
+    .chart-container canvas {
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    .btn-primary {
+        background-color: #1DA1F2;
+        border-color: #1DA1F2;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
+    }
+
+    .small-chart {
+        flex: 0.8; 
+    }
+
+    .small-pie {
+        width: 80% !important;
+        height: auto !important;
+    }
+</style>
+<body>
+
+    {% include 'fragments/sidenav.html' %}
+
+    <section class="home-content">
+        <div class="index-list-header">
+            <h2>{{ title }}</h2>
+        </div>
+
+        <div class="index-list-content">
+            <!-- Row 1: Sentiment Distribution and Country-wise Complaints -->
+            <div class="chart-row">
+                <div class="chart-container">
+                    <h5 class="text-center">Sentiment Distribution by Airline</h5>
+                    <canvas id="sentimentChart"></canvas>
+                </div>
+                <div class="chart-container small-chart">
+                    <h5 class="text-center">Country-wise Complaints</h5>
+                    <canvas id="countryChart" class="small-pie"></canvas>
+                </div>
+            </div>
+            
+
+            <!-- Row 2: Average Trust Score and Positive Sentiments -->
+            <div class="chart-row">
+                <div class="chart-container">
+                    <h5 class="text-center">Average Trust Score by Airline</h5>
+                    <canvas id="trustChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h5 class="text-center">Positive Sentiment Distribution by Airline</h5>
+                    <canvas id="positiveSentimentChart"></canvas>
+                </div>
+            </div>
+
+            <a href="/" class="btn btn-primary mt-3">Back to Dashboard</a>
+        </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Sentiment Distribution Chart
+        const sentimentData = {{ sentiment_json | tojson }};
+        const sentimentLabels = [...new Set(sentimentData.map(item => item.airline))];
+        const sentimentDatasets = [
+            {
+                label: "Negative",
+                data: sentimentLabels.map(label =>
+                    sentimentData.filter(item => item.airline === label && item.sentiment === "negative").reduce((sum, item) => sum + item.count, 0)
+                ),
+                backgroundColor: "rgba(255, 99, 132, 0.5)",
+            },
+            {
+                label: "Neutral",
+                data: sentimentLabels.map(label =>
+                    sentimentData.filter(item => item.airline === label && item.sentiment === "neutral").reduce((sum, item) => sum + item.count, 0)
+                ),
+                backgroundColor: "rgba(54, 162, 235, 0.5)",
+            },
+        ];
+
+        new Chart(document.getElementById("sentimentChart"), {
+            type: "bar",
+            data: {
+                labels: sentimentLabels,
+                datasets: sentimentDatasets,
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: "top" },
+                    title: { display: true, text: "Sentiment Distribution by Airline" },
+                },
+            },
+        });
+
+        // Country-wise Complaints Chart
+        const countryData = {{ country_json | tojson }};
+        new Chart(document.getElementById("countryChart"), {
+            type: "pie",
+            data: {
+                labels: countryData.map(item => item.country),
+                datasets: [
+                    {
+                        label: "Complaints",
+                        data: countryData.map(item => item.count),
+                        backgroundColor: [
+                            "rgba(255, 99, 132, 0.5)",
+                            "rgba(54, 162, 235, 0.5)",
+                            "rgba(255, 206, 86, 0.5)",
+                            "rgba(75, 192, 192, 0.5)",
+                            "rgba(153, 102, 255, 0.5)",
+                            "rgba(255, 159, 64, 0.5)",
+                        ],
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: "top" },
+                    title: { display: true, text: "Country-wise Complaints" },
+                    tooltip: {
+                        callbacks: {
+                            label: function (context) {
+                                let total = context.dataset.data.reduce((sum, value) => sum + value, 0);
+                                let percentage = ((context.raw / total) * 100).toFixed(2);
+                                return `${context.label}: ${context.raw} (${percentage}%)`;
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        // Average Trust Score Chart
+        const trustData = {{ avg_trust_json | tojson }};
+        new Chart(document.getElementById("trustChart"), {
+            type: "line",
+            data: {
+                labels: trustData.map(item => item.airline),
+                datasets: [
+                    {
+                        label: "Average Trust Score",
+                        data: trustData.map(item => item.avg_trust),
+                        backgroundColor: "rgba(75, 192, 192, 0.5)",
+                        borderColor: "rgba(75, 192, 192, 1)",
+                        fill: true,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: "top" },
+                    title: { display: true, text: "Average Trust Score by Airline" },
+                },
+            },
+        });
+
+        // Positive Sentiment Distribution Chart
+        const positiveData = {{ positive_sentiment_json | tojson }};
+        new Chart(document.getElementById("positiveSentimentChart"), {
+            type: "bar",
+            data: {
+                labels: positiveData.map(item => item.airline),
+                datasets: [
+                    {
+                        label: "Positive Sentiments",
+                        data: positiveData.map(item => item.count),
+                        backgroundColor: "rgba(75, 192, 192, 0.5)",
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: "top" },
+                    title: { display: true, text: "Positive Sentiment Distribution by Airline" },
+                },
+            },
+        });
+    </script>
+</body>
+</html>

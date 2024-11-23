@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"> <!-- Link to external CSS -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #007BFF;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        header img {
+            height: 50px;
+            margin-right: 15px; /* Space between logo and title */
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+
+        header p {
+            margin: 5px 0 0;
+            font-size: 1.1em;
+        }
+
+        .container {
+            margin: 20px auto;
+            max-width: 800px;
+        }
+
+        .task-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .task {
+            background-color: white;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .task:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .task h3 {
+            margin: 10px 0;
+        }
+
+        .task a {
+            display: inline-block;
+            text-decoration: none;
+            color: #007BFF;
+            font-weight: bold;
+            margin-top: 10px;
+            padding: 8px 15px;
+            border: 1px solid #007BFF;
+            border-radius: 5px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .task a:hover {
+            background-color: #007BFF;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo"> 
+        <div>
+            <h1>Twitter Airline Sentiment Dataset &nbsp;</h1>
+            <p>Exploratory Data Analysis &nbsp;</p>
+        </div>
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo">
+    </header>
+
+    <div class="container">
+        <div class="task-list">
+            <!-- Task 1 -->
+            <div class="task">
+                <h3>Task 1: Delayed Flights</h3>
+                <p>Explore the number of delayed flights by airline.</p>
+                <a href="/task1">View Task 1</a>
+            </div>
+            
+            <!-- Task 2 -->
+            <div class="task">
+                <h3>Task 2: Top Negative Reasons</h3>
+                <p>Find the top 5 negative reasons for each airline.</p>
+                <a href="/task2">View Task 2</a>
+            </div>
+
+            <!-- Task 3 -->
+            <div class="task">
+                <h3>Task 3: Country-wise Complaints</h3>
+                <p>Analyze complaints distribution by country.</p>
+                <a href="/task3">View Task 3</a>
+            </div>
+
+            <!-- Task 4 -->
+            <div class="task">
+                <h3>Task 4: Trust Scores</h3>
+                <p>Check mean and median trust scores.</p>
+                <a href="/task4">View Task 4</a>
+            </div>
+
+            <!-- Task 5 -->
+            <div class="task">
+                <h3>Task 5: Sentiment Analysis</h3>
+                <p>Review sentiment distribution of tweets.</p>
+                <a href="/task5">View Task 5</a>
+            </div>
+
+            <!-- Task 6 -->
+            <div class="task">
+                <h3>Task 6: Exploratory Data Analysis</h3>
+                <p>Dive into advanced analysis and EDA insights.</p>
+                <a href="/task6">View Task 6</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
