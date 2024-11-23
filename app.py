@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.sql import text
 from config import Config
@@ -216,15 +216,45 @@ def task4():
 # Task 5: Sentiment Analysis Results
 @app.route("/task5")
 def task5():
-    query = text("""
-        SELECT airline_sentiment, COUNT(*) AS sentiment_count
-        FROM airline_sentiments
-        GROUP BY airline_sentiment
-        ORDER BY sentiment_count DESC;
-    """)
-    results = db.session.execute(query).fetchall()
-    return render_template("task.html", title="Task 5: Sentiment Analysis", data=results, columns=["Sentiment", "Count"])
+    # Fetch the current page from query parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = 20  # Number of rows per page
 
+    # Fetch total count of rows for calculating pages
+    total_count_query = text("SELECT COUNT(*) FROM sentiment_results")
+    total_count = db.session.execute(total_count_query).scalar()
+    total_pages = (total_count + per_page - 1) // per_page
+
+    # Fetch paginated data
+    query = text(f"""
+        SELECT
+            text AS tweet_text,
+            sentiment_analysis AS predicted_sentiment,
+            airline_sentiment_gold AS actual_sentiment,
+            CASE WHEN sentiment_analysis = airline_sentiment_gold THEN 1 ELSE 0 END AS correct
+        FROM sentiment_results
+        LIMIT :limit OFFSET :offset
+    """)
+    results = db.session.execute(query, {"limit": per_page, "offset": (page - 1) * per_page}).fetchall()
+
+    # Calculate overall accuracy
+    accuracy_query = text("""
+        SELECT AVG(CASE WHEN sentiment_analysis = airline_sentiment_gold THEN 1 ELSE 0 END) * 100 AS overall_accuracy
+        FROM sentiment_results
+    """)
+    accuracy = db.session.execute(accuracy_query).scalar()
+    accuracy = round(accuracy, 2) if accuracy else 0
+
+    # Render the paginated results in task5.html
+    return render_template(
+        "task5.html",
+        title="Task 5: Sentiment Analysis Results",
+        data=results,
+        columns=["Tweet Text", "Predicted Sentiment", "Actual Sentiment", "Accuracy Score"],
+        overall_accuracy=accuracy,
+        page=page,
+        total_pages=total_pages
+    )
 
 # Task 6: Dynamic Visualizations
 @app.route("/task6")
@@ -235,7 +265,7 @@ def task6():
             SELECT airline, airline_sentiment, COUNT(*) AS count
             FROM airline_sentiments
             GROUP BY airline, airline_sentiment
-            ORDER BY count DESC;
+            ORDER BY airline, airline_sentiment;
         """)
         sentiment_data = db.session.execute(sentiment_query).fetchall()
 
@@ -266,17 +296,19 @@ def task6():
 
         country_json = [{"country": row[0], "count": row[1]} for row in country_data]
 
-        # Positive sentiment distribution
-        positive_sentiment_query = text("""
-            SELECT airline, COUNT(*) AS count
+        # Negative reason distribution
+        negative_reason_query = text("""
+            SELECT negativereason, COUNT(*) AS count
             FROM airline_sentiments
-            WHERE airline_sentiment = 'positive'
-            GROUP BY airline
+            WHERE negativereason IS NOT NULL
+            GROUP BY negativereason
             ORDER BY count DESC;
         """)
-        positive_sentiment_data = db.session.execute(positive_sentiment_query).fetchall()
+        negative_reason_data = db.session.execute(negative_reason_query).fetchall()
 
-        positive_sentiment_json = [{"airline": row[0], "count": row[1]} for row in positive_sentiment_data]
+        negative_reason_json = [
+            {"reason": row[0], "count": row[1]} for row in negative_reason_data
+        ]
 
         return render_template(
             "task6.html",
@@ -284,13 +316,11 @@ def task6():
             sentiment_json=sentiment_json,
             avg_trust_json=avg_trust_json,
             country_json=country_json,
-            positive_sentiment_json=positive_sentiment_json,
+            negative_reason_json=negative_reason_json,
         )
 
     except Exception as e:
         return f"Error occurred: {str(e)}", 500
-
-
 
 # -------------------------- Run App --------------------------
 if __name__ == "__main__":
