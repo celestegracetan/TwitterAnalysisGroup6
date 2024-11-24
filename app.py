@@ -260,10 +260,11 @@ def task5():
 @app.route("/task6")
 def task6():
     try:
-        # Sentiment distribution by airline
+        # Negative Sentiment Distribution by Airline
         sentiment_query = text("""
             SELECT airline, airline_sentiment, COUNT(*) AS count
             FROM airline_sentiments
+            WHERE airline_sentiment = 'negative'
             GROUP BY airline, airline_sentiment
             ORDER BY count DESC;
         """)
@@ -273,7 +274,7 @@ def task6():
             {"airline": row[0], "sentiment": row[1], "count": row[2]} for row in sentiment_data
         ]
 
-        # Average trust score by airline
+        # Average Trust Score by Airline
         trust_query = text("""
             SELECT airline, AVG(_trust) AS avg_trust
             FROM airline_sentiments
@@ -284,10 +285,11 @@ def task6():
 
         avg_trust_json = [{"airline": row[0], "avg_trust": row[1]} for row in trust_data]
 
-        # Country-wise complaints
+        # Country-wise Complaints
         country_complaints_query = text("""
             SELECT _country, COUNT(*) AS complaints_count
             FROM airline_sentiments
+            WHERE airline_sentiment = 'negative'
             GROUP BY _country
             ORDER BY complaints_count DESC
             LIMIT 10;
@@ -296,30 +298,30 @@ def task6():
 
         country_json = [{"country": row[0], "count": row[1]} for row in country_data]
 
-        # Positive sentiment distribution
-        positive_sentiment_query = text("""
-            SELECT airline, COUNT(*) AS count
+        # Negative Sentiment Reasons (Optional for Visualization)
+        negative_reason_query = text("""
+            SELECT negativereason, COUNT(*) AS count
             FROM airline_sentiments
-            WHERE airline_sentiment = 'positive'
-            GROUP BY airline
+            WHERE negativereason IS NOT NULL
+            GROUP BY negativereason
             ORDER BY count DESC;
         """)
-        positive_sentiment_data = db.session.execute(positive_sentiment_query).fetchall()
+        negative_reason_data = db.session.execute(negative_reason_query).fetchall()
 
-        positive_sentiment_json = [{"airline": row[0], "count": row[1]} for row in positive_sentiment_data]
+        negative_reason_json = [{"reason": row[0], "count": row[1]} for row in negative_reason_data]
 
+        # Pass Data to Template
         return render_template(
             "task6.html",
             title="Task 6: Detailed Analysis",
             sentiment_json=sentiment_json,
             avg_trust_json=avg_trust_json,
             country_json=country_json,
-            positive_sentiment_json=positive_sentiment_json,
+            negative_reason_json=negative_reason_json,
         )
 
     except Exception as e:
         return f"Error occurred: {str(e)}", 500
-
 
 
 # -------------------------- Run App --------------------------
