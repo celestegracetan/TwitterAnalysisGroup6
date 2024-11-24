@@ -7,8 +7,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# SQLAlchemy Configuration
-DATABASE_URI = 'postgresql://postgres:password@localhost/CloudProject2'
+# SQLAlchemy Configuration for CloudProject2
+DATABASE_URI = 'postgresql://postgres:cloudproject2group6@cloudproject2.cjwb4bnnxrdb.us-east-1.rds.amazonaws.com:5432/postgres'
 
 # Define Base
 Base = declarative_base()
