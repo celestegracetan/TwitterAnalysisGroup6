@@ -250,7 +250,7 @@ def task5():
         "task5.html",
         title="Task 5: Sentiment Analysis Results",
         data=results,
-        columns=["Tweet Text", "Predicted Sentiment", "Actual Sentiment", "Accuracy Score"],
+        columns=["Tweet Text", "Predicted Sentiment", "Actual Sentiment", "Correct"],
         overall_accuracy=accuracy,
         page=page,
         total_pages=total_pages
@@ -265,7 +265,7 @@ def task6():
             SELECT airline, airline_sentiment, COUNT(*) AS count
             FROM airline_sentiments
             GROUP BY airline, airline_sentiment
-            ORDER BY airline, airline_sentiment;
+            ORDER BY count DESC;
         """)
         sentiment_data = db.session.execute(sentiment_query).fetchall()
 
@@ -296,19 +296,17 @@ def task6():
 
         country_json = [{"country": row[0], "count": row[1]} for row in country_data]
 
-        # Negative reason distribution
-        negative_reason_query = text("""
-            SELECT negativereason, COUNT(*) AS count
+        # Positive sentiment distribution
+        positive_sentiment_query = text("""
+            SELECT airline, COUNT(*) AS count
             FROM airline_sentiments
-            WHERE negativereason IS NOT NULL
-            GROUP BY negativereason
+            WHERE airline_sentiment = 'positive'
+            GROUP BY airline
             ORDER BY count DESC;
         """)
-        negative_reason_data = db.session.execute(negative_reason_query).fetchall()
+        positive_sentiment_data = db.session.execute(positive_sentiment_query).fetchall()
 
-        negative_reason_json = [
-            {"reason": row[0], "count": row[1]} for row in negative_reason_data
-        ]
+        positive_sentiment_json = [{"airline": row[0], "count": row[1]} for row in positive_sentiment_data]
 
         return render_template(
             "task6.html",
@@ -316,12 +314,14 @@ def task6():
             sentiment_json=sentiment_json,
             avg_trust_json=avg_trust_json,
             country_json=country_json,
-            negative_reason_json=negative_reason_json,
+            positive_sentiment_json=positive_sentiment_json,
         )
 
     except Exception as e:
         return f"Error occurred: {str(e)}", 500
 
+
+
 # -------------------------- Run App --------------------------
 if __name__ == "__main__":
-    app.run(ssl_context=('server.crt', 'server.key'), host='0.0.0.0', port=443, debug=True)
+    app.run(ssl_context=('server.crt', 'server.key'), host='0.0.0.0', port=8000, debug=True)
