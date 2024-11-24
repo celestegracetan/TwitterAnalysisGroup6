@@ -324,4 +324,4 @@ def task6():
 
 # -------------------------- Run App --------------------------
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(ssl_context=('server.crt', 'server.key'), host='0.0.0.0', port=443, debug=True)
