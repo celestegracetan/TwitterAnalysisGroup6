@@ -22,7 +22,7 @@ engine = create_engine('postgresql://postgres:cloudproject2group6@cloudproject2.
 
 # SQL script to create the table with the specified schema
 create_table_sql = """
-CREATE TABLE IF NOT EXISTS "Airline-Full-Non-Ag-DFE-Sentiment" (
+CREATE TABLE IF NOT EXISTS "airline_sentiments" (
     golden BOOLEAN,
     channel VARCHAR(50),
     trust NUMERIC,
